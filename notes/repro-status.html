@@ -1,0 +1,663 @@
+<title>DOME Repro Runbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;600&display=swap">
+
+<style>
+  :root {
+    --paper:      #F2F5F5;
+    --surface:    #FFFFFF;
+    --surface-2:  #EAEFEF;
+    --ink:        #152124;
+    --ink-2:      #3C4E54;
+    --muted:      #67787D;
+    --rule:       #DBE3E4;
+    --rule-firm:  #C2CDCF;
+    --accent:     #0B6B63;
+    --accent-bg:  #E0EDEB;
+    --ok:         #2C6B4B;
+    --ok-bg:      #E2EDE6;
+    --warn:       #8A5A0B;
+    --warn-bg:    #F5ECDB;
+    --crit:       #9C3D2D;
+    --crit-bg:    #F6E7E3;
+    --code-bg:    #ECF1F1;
+    --shadow:     0 1px 2px rgba(21,33,36,.05), 0 8px 24px -16px rgba(21,33,36,.22);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #0D1517;
+      --surface:    #141F22;
+      --surface-2:  #1B282B;
+      --ink:        #DFE8E8;
+      --ink-2:      #B2C1C2;
+      --muted:      #839597;
+      --rule:       #253437;
+      --rule-firm:  #33474B;
+      --accent:     #56B5A8;
+      --accent-bg:  #11302E;
+      --ok:         #6FBE8D;
+      --ok-bg:      #13291E;
+      --warn:       #D5A54A;
+      --warn-bg:    #2C2312;
+      --crit:       #E08573;
+      --crit-bg:    #2E1B17;
+      --code-bg:    #101A1C;
+      --shadow:     0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:      #0D1517;
+    --surface:    #141F22;
+    --surface-2:  #1B282B;
+    --ink:        #DFE8E8;
+    --ink-2:      #B2C1C2;
+    --muted:      #839597;
+    --rule:       #253437;
+    --rule-firm:  #33474B;
+    --accent:     #56B5A8;
+    --accent-bg:  #11302E;
+    --ok:         #6FBE8D;
+    --ok-bg:      #13291E;
+    --warn:       #D5A54A;
+    --warn-bg:    #2C2312;
+    --crit:       #E08573;
+    --crit-bg:    #2E1B17;
+    --code-bg:    #101A1C;
+    --shadow:     0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: 3.5rem 1.5rem 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3.25rem;
+  }
+
+  /* ---------- type ---------- */
+  h1, h2, h3, .label, .chip, .stage-name, th, .btn {
+    font-family: Archivo, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 2.9rem);
+    font-weight: 700;
+    letter-spacing: -.024em;
+    line-height: 1.06;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  h2 {
+    font-size: 1.32rem;
+    font-weight: 600;
+    letter-spacing: -.012em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -.005em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  p { margin: 0; max-width: 66ch; }
+
+  .label {
+    font-size: .69rem;
+    font-weight: 600;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  code, pre, .mono {
+    font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  code {
+    font-size: .845em;
+    background: var(--code-bg);
+    border-radius: 3px;
+    padding: .1em .34em;
+    color: var(--ink-2);
+  }
+
+  a { color: var(--accent); }
+  a:focus-visible, .btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ---------- masthead ---------- */
+  header { display: flex; flex-direction: column; gap: 1.1rem; }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .55rem 1.1rem;
+    padding-bottom: 1.1rem;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .dek {
+    font-size: 1.08rem;
+    color: var(--ink-2);
+    max-width: 62ch;
+  }
+
+  /* ---------- pipeline strip ---------- */
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+    gap: .55rem;
+  }
+
+  .stage {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--rule-firm);
+    border-radius: 2px;
+    padding: .7rem .8rem .8rem;
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+  }
+
+  .stage.is-done { border-top-color: var(--ok); }
+
+  .stage-id {
+    font-family: "JetBrains Mono", monospace;
+    font-size: .7rem;
+    color: var(--muted);
+    letter-spacing: .04em;
+  }
+
+  .stage-name {
+    font-size: .88rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .stage-state {
+    font-family: "JetBrains Mono", monospace;
+    font-size: .69rem;
+    letter-spacing: .02em;
+    color: var(--muted);
+  }
+
+  .stage.is-done .stage-state { color: var(--ok); }
+
+  /* ---------- sections ---------- */
+  section { display: flex; flex-direction: column; gap: 1.1rem; }
+
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: .9rem;
+    border-bottom: 1px solid var(--rule-firm);
+    padding-bottom: .5rem;
+  }
+
+  .sec-head h2 { flex: 1; }
+
+  /* ---------- data table ---------- */
+  .table-scroll { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .93rem;
+    min-width: 30rem;
+  }
+
+  th {
+    text-align: left;
+    font-size: .69rem;
+    font-weight: 600;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 .9rem .5rem 0;
+    border-bottom: 1px solid var(--rule-firm);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: .55rem .9rem .55rem 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: baseline;
+  }
+
+  td.num {
+    font-family: "JetBrains Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .86rem;
+    white-space: nowrap;
+  }
+
+  td.file {
+    font-family: "JetBrains Mono", monospace;
+    font-size: .82rem;
+    color: var(--ink-2);
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  /* ---------- fix cards ---------- */
+  .fixes { display: flex; flex-direction: column; gap: .8rem; }
+
+  .fix {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 1.15rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    box-shadow: var(--shadow);
+  }
+
+  .fix-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .6rem;
+  }
+
+  .fix-file {
+    font-family: "JetBrains Mono", monospace;
+    font-size: .87rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .chip {
+    font-size: .64rem;
+    font-weight: 600;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    padding: .18rem .48rem;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  .chip-crit { background: var(--crit-bg); color: var(--crit); }
+  .chip-warn { background: var(--warn-bg); color: var(--warn); }
+  .chip-ok   { background: var(--ok-bg);   color: var(--ok); }
+  .chip-acc  { background: var(--accent-bg); color: var(--accent); }
+
+  .fix p { font-size: .96rem; }
+
+  .verified {
+    font-size: .84rem;
+    color: var(--muted);
+    border-left: 2px solid var(--ok);
+    padding-left: .7rem;
+  }
+
+  /* ---------- code blocks ---------- */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 1rem 1.1rem;
+    margin: 0;
+    overflow-x: auto;
+    font-size: .82rem;
+    line-height: 1.72;
+    color: var(--ink);
+  }
+
+  pre .c { color: var(--muted); }
+  pre .k { color: var(--accent); }
+
+  /* ---------- run order ---------- */
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    counter-reset: step;
+  }
+
+  .steps > li {
+    display: grid;
+    grid-template-columns: 3.1rem 1fr;
+    gap: .3rem .9rem;
+    align-items: baseline;
+  }
+
+  .steps > li::before {
+    content: attr(data-stage);
+    font-family: "JetBrains Mono", monospace;
+    font-size: .74rem;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: .04em;
+    padding-top: .15rem;
+  }
+
+  .step-body {
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+    min-width: 0;
+  }
+
+  .step-note { font-size: .9rem; color: var(--ink-2); }
+
+  /* ---------- watch list ---------- */
+  .watch { display: flex; flex-direction: column; gap: .9rem; }
+
+  .watch-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: .2rem .85rem;
+    align-items: baseline;
+    padding-bottom: .9rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .watch-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .watch-item h3 { grid-column: 2; }
+  .watch-item p { grid-column: 2; font-size: .94rem; color: var(--ink-2); }
+  .watch-dot {
+    grid-row: 1 / span 2;
+    width: .55rem; height: .55rem;
+    border-radius: 50%;
+    background: var(--warn);
+    transform: translateY(.45rem);
+  }
+  .watch-dot.is-crit { background: var(--crit); }
+
+  /* ---------- decisions ---------- */
+  .decisions { display: flex; flex-direction: column; gap: .1rem; }
+
+  .decision {
+    display: grid;
+    grid-template-columns: 1.5rem 1fr;
+    gap: .8rem;
+    align-items: baseline;
+    padding: .7rem 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: .97rem;
+  }
+
+  .decision:last-child { border-bottom: none; }
+
+  .box {
+    font-family: "JetBrains Mono", monospace;
+    font-size: .95rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  footer {
+    border-top: 1px solid var(--rule-firm);
+    padding-top: 1.1rem;
+    font-size: .87rem;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem 1.5rem;
+  }
+
+  @media (max-width: 34rem) {
+    body { font-size: 16px; }
+    .steps > li { grid-template-columns: 1fr; }
+    .steps > li::before { padding-top: 0; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="meta-row">
+      <span class="label">DOME &middot; WWW&rsquo;26 reproduction</span>
+      <span class="label" style="color:var(--accent)">Updated 31 Aug 2026</span>
+    </div>
+    <h1>DOME Repro Runbook</h1>
+    <p class="dek">Data and code are ready; no pipeline stage has been started. Four defects in the repo&rsquo;s own scripts were fixed and smoke-tested today. Grow the disk, then run the five stages below.</p>
+  </header>
+
+  <section>
+    <div class="sec-head">
+      <h2>Pipeline state</h2>
+      <span class="label">6 stages</span>
+    </div>
+    <div class="pipeline">
+      <div class="stage is-done">
+        <span class="stage-id">00</span>
+        <span class="stage-name">Data &amp; models</span>
+        <span class="stage-state">complete</span>
+      </div>
+      <div class="stage">
+        <span class="stage-id">1a</span>
+        <span class="stage-name">BERT vectors</span>
+        <span class="stage-state">not started</span>
+      </div>
+      <div class="stage">
+        <span class="stage-id">1b</span>
+        <span class="stage-name">RQ docIDs</span>
+        <span class="stage-state">not started</span>
+      </div>
+      <div class="stage">
+        <span class="stage-id">1c</span>
+        <span class="stage-name">GR training</span>
+        <span class="stage-state">not started</span>
+      </div>
+      <div class="stage">
+        <span class="stage-id">02</span>
+        <span class="stage-name">Edit requests</span>
+        <span class="stage-state">not started</span>
+      </div>
+      <div class="stage">
+        <span class="stage-id">03</span>
+        <span class="stage-name">DOME editing</span>
+        <span class="stage-state">not started</span>
+      </div>
+    </div>
+    <p class="step-note">No <code>corpus_vectors_*</code>, no <code>corpus_docids_rq_*</code>, no checkpoints, no <code>Edit/</code> directory exist yet.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>What&rsquo;s ready</h2>
+      <span class="chip chip-ok">verified on disk</span>
+    </div>
+    <p>Everything under <code>data/nq320k/</code>, built by <code>prepare_nq320k.py</code> from <code>dqmis/NQ320K-NCI</code>. The pseudo-queries were re-checked after the forced shutdown: valid JSON, exactly ten per document, contiguous docIDs, no blanks, no leftover <code>.tmp</code>.</p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>File</th><th>Contents</th><th>Count</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="file">corpus1.json</td><td>initial collection</td><td class="num">99,650 docs</td></tr>
+          <tr><td class="file">corpus2.json</td><td>held-out &ldquo;new&rdquo; docs to edit in</td><td class="num">10,000 docs</td></tr>
+          <tr><td class="file">train1.json</td><td>query &rarr; corpus1 docID</td><td class="num">298,643 pairs</td></tr>
+          <tr><td class="file">train2.json</td><td>query &rarr; corpus2 docID</td><td class="num">8,730 pairs</td></tr>
+          <tr><td class="file">dev.json / dev1.json</td><td>validation queries</td><td class="num">6,036 pairs</td></tr>
+          <tr><td class="file">train1.json.qg.json</td><td>pseudo-queries, docIDs 0&ndash;99,649</td><td class="num">996,500 pairs</td></tr>
+          <tr><td class="file">train2.json.qg.json</td><td>pseudo-queries, docIDs 99,650&ndash;109,649</td><td class="num">100,000 pairs</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="step-note">Models sit one level above the repo in <code>../huggingface/</code>: <code>bert-base-uncased</code>, <code>t5-large</code>, <code>doc2query-t5-base-msmarco</code>. Seven modules the repo imports but never shipped were reconstructed in an earlier session.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Fixes applied today</h2>
+      <span class="label">uncommitted &mdash; see git diff</span>
+    </div>
+    <div class="fixes">
+
+      <div class="fix">
+        <div class="fix-head">
+          <span class="fix-file">DOME.py</span>
+          <span class="chip chip-crit">silent wrong results</span>
+        </div>
+        <p><code>main()</code> never passed <code>epoch_path</code>, so a missing GR checkpoint only printed a warning and DOME ran its whole edit pipeline against a raw pretrained t5-large that has never seen a docID &mdash; plausible-looking, meaningless numbers.</p>
+        <p>Added <code>--gr_checkpoint</code> (default <code>data/output/t5-large-rq-ckpts/34.pt</code>), passed it through, and made a missing checkpoint raise. Repointed <code>--model_name</code> to <code>../huggingface/t5-large</code> and the four data files to <code>Edit/data/</code>.</p>
+      </div>
+
+      <div class="fix">
+        <div class="fix-head">
+          <span class="fix-file">GR/get_docid.py</span>
+          <span class="chip chip-crit">stage 2 crash</span>
+          <span class="chip chip-warn">duplicate docIDs</span>
+        </div>
+        <p>It emitted only <code>corpus_docids_rq_1</code>, but <code>get_knowns.py</code> reads <code>_1</code> <em>and</em> <code>_2</code>. It now does both in one run: the RQ quantizer is fit on corpus1, then corpus2 is <em>encoded</em> with those same codebooks. Refitting on corpus2 would give the new documents a codebook inconsistent with the initial collection, which is not what the paper does.</p>
+        <p>Corpus1&rsquo;s random collision-digits are carried into the corpus2 pass as <code>reserved</code>, so a new document cannot be handed a docID an initial document already owns. Separately, an RQ code holding more than 128 documents exhausts the digit range &mdash; upstream silently assigns <code>0</code> and duplicates a docID. That now warns loudly, and the uniqueness check runs across the concatenated corpus.</p>
+        <p class="verified">Smoke-tested on 300&nbsp;+&nbsp;20 synthetic documents: 320 docIDs, 0% duplication, and the <code>corpusids[global_docid]</code> positional invariant holds.</p>
+      </div>
+
+      <div class="fix">
+        <div class="fix-head">
+          <span class="fix-file">GR/get_knowns.py</span>
+          <span class="chip chip-warn">crash at the finish</span>
+        </div>
+        <p><code>Edit/data/</code> is not in the repo and nothing created it, so every write failed <em>after</em> all the work was done. <code>write_json</code> now creates it. Also replaced two list rebuilds sitting inside 100k-iteration loops with a set lookup.</p>
+        <p class="verified">Smoke-tested end to end: emits all seven files DOME reads.</p>
+      </div>
+
+      <div class="fix">
+        <div class="fix-head">
+          <span class="fix-file">GR/get_vectors.py</span>
+          <span class="chip chip-acc">efficiency</span>
+        </div>
+        <p>Pads to the longest document in the batch instead of always to 500 tokens &mdash; identical embeddings, far less wasted compute. Also dropped a <code>.squeeze()</code> that breaks when the final batch holds exactly one document.</p>
+      </div>
+
+    </div>
+    <p class="step-note"><code>DOME.py</code>, <code>GR/get_knowns.py</code> and <code>GR/get_vectors.py</code> are CRLF upstream and were kept CRLF; <code>GR/get_docid.py</code> is LF.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>First: grow the disk</h2>
+      <span class="chip chip-warn">blocks the run</span>
+    </div>
+    <p>65&nbsp;GB today with ~18&nbsp;GB free; a full run needs roughly 85&nbsp;GB on top of what is already used. Target <strong>150&nbsp;GB</strong>. <code>sda1</code> already fills the disk, so grow the virtual disk first.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>What it costs</th><th>Size</th></tr></thead>
+        <tbody>
+          <tr><td>corpus_vectors_1/2.json</td><td class="num">~5 GB</td></tr>
+          <tr><td>10 &times; t5-large checkpoints</td><td class="num">28 GB</td></tr>
+          <tr><td>DOME edited model + covariance cache</td><td class="num">~4 GB</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <pre><span class="c"># after enlarging the virtual disk</span>
+sudo growpart /dev/sda 1
+sudo resize2fs /dev/sda1</pre>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Run order</h2>
+      <span class="label">from the repo root</span>
+    </div>
+    <ol class="steps">
+      <li data-stage="1a">
+        <div class="step-body">
+          <pre>./.venv/bin/python GR/get_vectors.py</pre>
+          <p class="step-note">BERT-embeds all 109,650 documents into <code>corpus_vectors_1/2.json</code>.</p>
+        </div>
+      </li>
+      <li data-stage="1b">
+        <div class="step-body">
+          <pre>./.venv/bin/python GR/get_docid.py</pre>
+          <p class="step-note">Now emits <code>corpus_docids_rq_1.json</code> <em>and</em> <code>_2.json</code>. Check the printed duplication rate is 0%.</p>
+        </div>
+      </li>
+      <li data-stage="1c">
+        <div class="step-body">
+          <pre>./.venv/bin/accelerate launch --mixed_precision bf16 \
+    GR/training.py --epochs 35 --eval_interval 5</pre>
+          <p class="step-note">The long pole. <code>--epochs 35</code> lands the final checkpoint exactly on the <code>34.pt</code> that DOME expects.</p>
+        </div>
+      </li>
+      <li data-stage="2">
+        <div class="step-body">
+          <pre>./.venv/bin/python GR/get_knowns.py</pre>
+          <p class="step-note">Writes the seven edit-request files into <code>Edit/data/</code>.</p>
+        </div>
+      </li>
+      <li data-stage="3">
+        <div class="step-body">
+          <pre>./.venv/bin/python DOME.py</pre>
+          <p class="step-note">The editing itself. Fails fast now if the GR checkpoint is missing.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Watch for</h2>
+    </div>
+    <div class="watch">
+
+      <div class="watch-item">
+        <span class="watch-dot is-crit"></span>
+        <h3>training.py cannot resume</h3>
+        <p>A crash at epoch 40 restarts from epoch 0 with the checkpoint sitting unused &mdash; the difference between losing an hour and losing four days. Adding resume (load newest <code>.pt</code>, restore epoch and scheduler position) is the open recommendation before any long run.</p>
+      </div>
+
+      <div class="watch-item">
+        <span class="watch-dot"></span>
+        <h3>GPU memory, in the first minutes</h3>
+        <p>24&nbsp;GB total, and AdamW in fp32 on t5-large&rsquo;s 770M parameters is ~12.4&nbsp;GB before activations. A plain <code>Accelerator()</code> defaults to fp32, which is why the launch above forces bf16. If batch 128 still OOMs, drop to <code>--batch_size 64</code>.</p>
+      </div>
+
+      <div class="watch-item">
+        <span class="watch-dot"></span>
+        <h3>Step rate, before committing the week</h3>
+        <p>1.39M samples per epoch at batch 128 is ~10.9k steps per epoch, ~381k steps across 35 epochs. At roughly 1&nbsp;s/step that is ~4.5 days &mdash; but unmeasured on this 3090. Watch the first hundred steps and extrapolate.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Open decisions</h2>
+      <span class="label">3 pending</span>
+    </div>
+    <div class="decisions">
+      <div class="decision"><span class="box">[ ]</span><span>Grow the disk to 150&nbsp;GB</span></div>
+      <div class="decision"><span class="box">[ ]</span><span>Add resume-from-checkpoint to <code>GR/training.py</code> &mdash; recommended, not yet done</span></div>
+      <div class="decision"><span class="box">[ ]</span><span>Commit the four fixes above; they are working-tree changes right now</span></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Same content lives in the repo at <code>notes/repro-status.md</code></span>
+    <span>~/projects/DOME &middot; single RTX 3090</span>
+  </footer>
+
+</div>

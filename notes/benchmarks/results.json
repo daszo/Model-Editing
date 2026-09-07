@@ -1,0 +1,35 @@
+{
+  "gpu": "RTX 3090 24GB, driver 595.84, power limit 350W",
+  "epoch_samples": 1394793,
+  "steps_per_epoch_bs128": 10897,
+  "sustained_model_sweep_bf16_adamw_bs128": {
+    "t5-large": {"params_M": 737.8, "s_step": 1.695, "vram_gb": 19.25, "h_epoch": 5.13, "d35": 7.48, "d50": 10.69},
+    "t5-base":  {"params_M": 223.0, "s_step": 0.564, "vram_gb": 6.73,  "h_epoch": 1.71, "d35": 2.49, "d50": 3.56},
+    "t5-small": {"params_M": 60.6,  "s_step": 0.117, "vram_gb": 2.18,  "h_epoch": 0.35, "d35": 0.52, "d50": 0.74}
+  },
+  "sustained_precision_optimizer_t5large_bs128": {
+    "bf16_adamw":     {"s_step": 1.695, "vram_gb": 19.25, "d35": 7.48},
+    "fp32_adamw":     {"s_step": 3.515, "vram_gb": 19.95, "d35": 15.52},
+    "bf16_adafactor": {"s_step": 1.924, "vram_gb": 13.36, "d35": 8.49}
+  },
+  "cold_biased_directional": {
+    "t5large_bf16_bs256": "OOM",
+    "t5large_bf16_bs64_cold": {"s_step": 0.642, "vram_gb": 14.85, "note": "worse throughput/sample than bs128"},
+    "t5base_bf16_bs256_cold": {"vram_gb": 10.15},
+    "t5small_bf16_bs384_cold": {"vram_gb": 4.78}
+  },
+  "gpu_throttle": {
+    "idle_mhz": 210, "cold_boost_mhz": 1950, "sustained_mhz_range": [255, 765],
+    "sustained_temp_c": [76, 82], "sustained_power_w": [150, 170], "power_limit_w": 350,
+    "verdict": "cooling-limited (not power-limited); ~4x clock loss cold->sustained",
+    "cold_first_reading_s_step": 0.485, "sustained_s_step": 1.695
+  },
+  "real_training_validation": {
+    "script": "GR/training.py via accelerate launch --mixed_precision bf16",
+    "training_data_size": 1394793, "vram_mib": 19554, "steady_s_step": 1.7,
+    "loss_20p6_to_13p6_over_140_steps": true
+  },
+  "stage0_embedding": {"docs_per_s": 27.9, "full_109650_minutes": 65.5, "vectors_json_gb_est": 4.4},
+  "disk": {"total_g": 259, "free_g": 210, "resolved": true},
+  "dome_editing": {"mom2_n_samples": 400000, "note": "covariance precompute one-time+cached; not directly timed (needs trained ckpt)"}
+}
