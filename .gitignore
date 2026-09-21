@@ -1,3 +1,6 @@
 GR/*
 data/*
 dsets/*
+
+# Explanation Gate judge credentials, never commit
+.claude/.env
